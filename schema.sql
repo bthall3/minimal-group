@@ -3,7 +3,8 @@
 -- Matrices are defined client-side (index.html CONFIG); the database only
 -- stores the canonical column c (1..13) and derives lean = 7 - c.
 
-create extension if not exists pgcrypto;
+-- Requires pgcrypto's gen_random_bytes (enabled by default on Supabase; do NOT
+-- run `create extension pgcrypto` there, it can hang in the SQL tool).
 
 -- ---------------------------------------------------------------- tables
 create table if not exists public.submissions (
@@ -47,6 +48,16 @@ revoke all on public.config      from anon, authenticated;
 grant insert (token, color, matrix_order, a_row_order, a_direction,
               b_row_order, b_direction, a_col, b_col)
   on public.submissions to anon;
+
+-- INSERT ... ON CONFLICT (token) needs SELECT on the arbiter column AND a SELECT
+-- policy that passes for the new row (verified on Postgres 17). This policy only
+-- matches rows created in the *current transaction*, so anon can never read any
+-- previously stored row; `select *` is still refused (no privilege on other columns).
+grant select (token) on public.submissions to anon;
+drop policy if exists anon_select_own_txn_only on public.submissions;
+create policy anon_select_own_txn_only on public.submissions
+  for select to anon
+  using (created_at = now());
 
 -- Policies cannot read config as anon, so use a definer helper.
 create or replace function public.submissions_are_open()

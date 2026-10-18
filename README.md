@@ -24,7 +24,7 @@ Files: `index.html` (student + instructor views), `schema.sql`, `INSTRUCTOR_NOTE
 
 ## Security caveats
 
-- The anon key is visible in the page source. That is normal; safety comes from RLS: anon can only `insert` into `submissions` (while submissions are open), and cannot select, update, or delete. `config` is not accessible to anon.
+- The anon key is visible in the page source. That is normal; safety comes from RLS: anon can only `insert` into `submissions` (while submissions are open) and cannot update or delete. It has a column-level SELECT on `token` only, filtered by a policy that matches only rows created in the same transaction, which `ON CONFLICT` requires; no stored row is readable. `config` is not accessible to anon.
 - The instructor key is a shared secret in the URL. It can leak via screen share, browser history, or the projected address bar. Adequate for a classroom demo, **not strong security**. If it leaks, rotate: `update public.config set instructor_key = encode(gen_random_bytes(12),'hex');`
 - Anyone with the student URL can insert rows while submissions are open (the dedupe token is client-generated, so a determined person can submit many). Close submissions after the activity.
 - Nothing identifying is stored by the app (no names, IPs, or user-agents; the hosting platforms keep their default logs).
