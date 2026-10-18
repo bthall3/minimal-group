@@ -441,7 +441,8 @@ function instructor() {
       const zx = m.l + 6.5 * bw;
       svg.append(s('line', {x1: zx, x2: zx, y1: m.t, y2: H - m.b + 6, stroke: '#ececec', 'stroke-width': 2, 'stroke-dasharray': '6 5'}));
       svg.append(s('text', {x: zx + 6, y: m.t + 16, 'font-size': 16, class: 'muted'}, '0 = fair'));
-      svg.append(s('text', {x: (m.l + W - m.r) / 2, y: H - 8, 'text-anchor': 'middle', 'font-size': 16, class: 'muted'}, '← favors other group      favors own group →'));
+      svg.append(s('text', {x: m.l, y: H - 8, 'font-size': 16, class: 'muted'}, '← favors other group'));
+      svg.append(s('text', {x: W - m.r, y: H - 8, 'text-anchor': 'end', 'font-size': 16, class: 'muted'}, 'favors own group →'));
       svg._ymax = s('text', {x: m.l - 6, y: m.t + 14, 'text-anchor': 'end', 'font-size': 16, class: 'muted'}, '');
       svg.append(svg._ymax);
     }
