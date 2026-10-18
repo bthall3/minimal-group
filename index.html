@@ -60,6 +60,7 @@ body.inst{font-size:22px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:16px;padding:0 24px 40px}
 .panel{background:var(--panel);border-radius:14px;padding:14px 16px}
 .panel h2{font-size:1.15rem;margin:0 0 6px}
+.panel .note{color:var(--muted);font-size:.85rem;line-height:1.35;margin:0 0 8px}
 .panel.wide{grid-column:1/-1}
 .panel svg{width:100%;height:auto;display:block}
 svg text{fill:var(--text);font-family:inherit}
@@ -417,8 +418,12 @@ function instructor() {
   catch (e) { qr.remove(); }
 
   // ----- chart scaffolding -----
-  function panel(title, cls) { const svg = s('svg'); return {svg, el: h('div', {class: 'panel ' + (cls || '')}, h('h2', {}, title), svg)}; }
-  const pHA = panel('Matrix A (costly): lean'), pHB = panel('Matrix B (free): lean');
+  function panel(title, cls, note) {
+    const svg = s('svg');
+    return {svg, el: h('div', {class: 'panel ' + (cls || '')}, h('h2', {}, title), note ? h('div', {class: 'note'}, note) : '', svg)};
+  }
+  const pHA = panel('Matrix A (costly): lean', '', 'Favoring your own group means fewer points for both groups (your group\'s person drops from 13 to as low as 7). The fair choice is 13/13.');
+  const pHB = panel('Matrix B (free): lean', '', 'The two people always get 26 points combined, so favoring your own group costs nothing. The fair choice is 13/13.');
   const pStat = h('div', {class: 'panel'}, h('h2', {}, 'Mean lean and paired difference'));
   const stats = h('div', {class: 'stats'}); const ciSvg = s('svg'); pStat.append(stats, ciSvg);
   const pSc = panel('Each dot: one student (size = how many)'), pCol = panel('Mean lean by group (A and B averaged)'),
