@@ -1,6 +1,8 @@
 // Run: SUPABASE_URL=... ANON_KEY=... INSTRUCTOR_KEY=... node tests/db_test.mjs [--load]
 // Checks RLS (no anon read), duplicate handling, range checks, and optionally 250 inserts over ~60 s.
 // WARNING: calls reset_data at the start and end. Run only against a pilot/empty database.
+// --keep leaves the load-test rows in place (with lean values drawn around fair / slight ingroup lean) so the dashboard has something to show.
+// Those rows are synthetic: click Reset data on the dashboard before class.
 import assert from 'node:assert/strict';
 const {SUPABASE_URL: U, ANON_KEY: K, INSTRUCTOR_KEY: IK} = process.env;
 if (!U || !K || !IK) { console.error('set SUPABASE_URL, ANON_KEY, INSTRUCTOR_KEY'); process.exit(2); }
@@ -38,7 +40,9 @@ if (process.argv.includes('--load')) {
   const N = 250, T = 60000, t0 = Date.now(); let fails = 0; const lat = [];
   const jobs = Array.from({length: N}, (_, i) => (async () => {
     await new Promise(res => setTimeout(res, Math.random() * T));
-    const row = mk(i), s = Date.now();
+    const g = () => (Math.random() + Math.random() + Math.random() - 1.5) * 2;   // ~N(0, 1)
+    const col = (mu, sd) => Math.min(13, Math.max(1, 7 - Math.round(mu + sd * g())));
+    const row = mk(i, process.argv.includes('--keep') ? {a_col: col(0.3, 2), b_col: col(1.2, 2.5), color: Math.random() < .5 ? 'purple' : 'green', matrix_order: Math.random() < .5 ? 'AB' : 'BA'} : {}), s = Date.now();
     for (let rep = 0; rep < (i % 10 === 0 ? 2 : 1); rep++) { const x = await insert(row); if (!x.ok) { fails++; console.error(x.status, await x.text()); } }
     lat.push(Date.now() - s);
   })());
@@ -47,4 +51,5 @@ if (process.argv.includes('--load')) {
   assert.equal(fails, 0); assert.equal(await count(), N);
   ok(`load: ${N} inserts (+${N / 10} duplicate resends) in ${((Date.now() - t0) / 1000).toFixed(0)}s, 0 errors, ${N} rows; p50 ${lat[N >> 1]}ms p95 ${lat[Math.floor(N * .95)]}ms`);
 }
-await rpc('reset_data', {p_key: IK}); assert.equal(await count(), 0); ok('cleaned up');
+if (process.argv.includes('--keep')) console.log('kept rows; remember to Reset data before class');
+else { await rpc('reset_data', {p_key: IK}); assert.equal(await count(), 0); ok('cleaned up'); }
