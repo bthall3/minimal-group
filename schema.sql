@@ -140,7 +140,7 @@ set search_path = public, pg_temp
 as $$
 begin
   perform public._check_key(p_key);
-  update public.config set submissions_open = p_open;
+  update public.config set submissions_open = p_open where true;
   return p_open;
 end $$;
 
